@@ -9,6 +9,9 @@
 # Except everything in shared
 !/shared/*
 
+# Except github actions
+!/.github/*
+
 .patches-applied
 *.dat
 *.gz
