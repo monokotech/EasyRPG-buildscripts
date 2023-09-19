@@ -1,0 +1,60 @@
+name: Test
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  macos:
+    runs-on: macos-latest
+
+    # https://ccache.dev/manual/latest.html#_configuration_options
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        if: github.event.inputs.git-ref == ''
+
+      - name: Restore Cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/Library/Caches/ccache
+          key: toolchain_${{ github.job }}
+
+      - name: Install Homebrew dependencies
+        run: |
+          brew install automake ccache ninja
+
+      - name: Compile
+        env:
+          USE_EASYRPG_MIRROR: 1
+        run: |
+          cd macos
+          ./0_build_everything.sh
+
+      # "actions/cache" uses "Post Cache", which cannot always be saved
+      - name: Always Save Cache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ~/Library/Caches/ccache
+          key: toolchain_${{ github.job }}
+
+      - name: Create Archive
+        if: always()
+        run: |
+          tar czf artifact.tar.gz --exclude artifact.tar.gz .
+
+      # use github api to download artifact to debug
+      # curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer <token>" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/monokotech/EasyRPG-buildscripts/actions/runs/<runs-id>/artifacts
+      # use curl -o to download archive_download_url in json output of the previous step
+      # unzip artifact.zip && rm artifact.zip && mkdir tmp && tar xf artifact.tar.gz -C tmp && rm artifact.tar.gz
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: artifact
+          path: artifact.tar.gz

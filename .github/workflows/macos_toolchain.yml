@@ -1,0 +1,55 @@
+name: MacOS Toolchain
+
+on:
+  push:
+    tags:
+    - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        if: github.event.inputs.git-ref == ''
+
+      - name: Restore Cache
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/Library/Caches/ccache
+          key: toolchain_${{ github.job }}
+
+      - name: Install Homebrew dependencies
+        run: |
+          brew install automake ccache ninja
+
+      - name: Compile
+        env:
+          USE_EASYRPG_MIRROR: 1
+        run: |
+          cd macos
+          ./0_build_everything.sh
+
+      - name: Always Save Cache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ~/Library/Caches/ccache
+          key: toolchain_${{ github.job }}
+
+      - name: Create Archive
+        run: |
+          cd macos
+          tar czf ../macos_toolchain.tar.gz universal/include/ universal/lib/ universal/bin/
+
+      - name: Create Github Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: macos_toolchain.tar.gz
+          replacesArtifacts: false
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
