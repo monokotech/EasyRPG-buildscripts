@@ -47,12 +47,12 @@ function set_build_flags() {
 		export CC="ccache $CC"
 		export CXX="ccache $CXX"
 	fi
-	export CFLAGS="-g -O2 -mmacosx-version-min=10.9 -isysroot $SDKPATH $3"
+	export CFLAGS="-g -O2 -mmacosx-version-min=10.12 -isysroot $SDKPATH $3"
 	export CXXFLAGS=$CFLAGS
 	export CPPFLAGS="-I$PLATFORM_PREFIX/include"
-	export LDFLAGS="-L$PLATFORM_PREFIX/lib $ARCH -mmacosx-version-min=10.9 -isysroot $SDKPATH"
+	export LDFLAGS="-L$PLATFORM_PREFIX/lib $ARCH -mmacosx-version-min=10.12 -isysroot $SDKPATH"
 
-	export MACOSX_DEPLOYMENT_TARGET=10.9
+	export MACOSX_DEPLOYMENT_TARGET=10.12
 
 	export PKG_CONFIG_PATH=$PLATFORM_PREFIX/lib/pkgconfig
 	export PKG_CONFIG_LIBDIR=$PKG_CONFIG_PATH
